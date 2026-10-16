@@ -1,4 +1,4 @@
-#include "ets5sign.h"
+#include "etssign.h"
 #include "sha1.h"
 
 #include <ctype.h>
@@ -52,7 +52,7 @@ static int parse_guid(const char *s, uint8_t out[16]) {
     return 0;
 }
 
-int ets5_mask(const char *guid_str, const char *project_id, uint16_t *mask_out) {
+int ets_mask(const char *guid_str, const char *project_id, uint16_t *mask_out) {
     uint8_t guid[16];
     if (parse_guid(guid_str, guid) != 0) {
         return -1;
@@ -68,7 +68,7 @@ int ets5_mask(const char *guid_str, const char *project_id, uint16_t *mask_out) 
     return 0;
 }
 
-void ets5_hash(const uint8_t *file_bytes, size_t len, uint16_t mask,
+void ets_hash(const uint8_t *file_bytes, size_t len, uint16_t mask,
                uint8_t out_digest[20]) {
     sha1_ctx ctx;
     sha1_init(&ctx);
@@ -86,10 +86,10 @@ void ets5_hash(const uint8_t *file_bytes, size_t len, uint16_t mask,
 static const char BASE64_ALPHABET[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-void ets5_hash_b64(const uint8_t *file_bytes, size_t len, uint16_t mask,
-                    char out_b64[ETS5SIGN_B64_LEN]) {
+void ets_hash_b64(const uint8_t *file_bytes, size_t len, uint16_t mask,
+                    char out_b64[ETSSIGN_B64_LEN]) {
     uint8_t digest[20];
-    ets5_hash(file_bytes, len, mask, digest);
+    ets_hash(file_bytes, len, mask, digest);
 
     int out = 0;
     size_t i = 0;
@@ -138,7 +138,7 @@ static const char *find_attr(const char *data, size_t len, const char *name,
     return NULL;
 }
 
-int ets5_read_project_p(const char *p_file_bytes, size_t len, char *id_out,
+int ets_read_project_p(const char *p_file_bytes, size_t len, char *id_out,
                          size_t id_out_size, char *guid_out,
                          size_t guid_out_size) {
     if (find_attr(p_file_bytes, len, " Id", id_out, id_out_size) == NULL) {

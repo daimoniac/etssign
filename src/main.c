@@ -1,15 +1,15 @@
 /*
- * ets5sign - CLI for computing/checking/writing ETS ProjectStore
+ * etssign - CLI for computing/checking/writing ETS ProjectStore
  * .ets5hash companion files. ETS 5 and ETS 6 share this suffix and
- * recipe. See ets5sign.h for the algorithm.
+ * recipe. See etssign.h for the algorithm.
  *
  * Usage:
- *   ets5sign hash  --guid GUID --id ID FILE
- *   ets5sign mask  --guid GUID --id ID
- *   ets5sign check --guid GUID --id ID FILE [FILE...]
- *   ets5sign write --guid GUID --id ID FILE [FILE...]
- *   ets5sign check STORE_DIR [FILE...]
- *   ets5sign write STORE_DIR [FILE...]
+ *   etssign hash  --guid GUID --id ID FILE
+ *   etssign mask  --guid GUID --id ID
+ *   etssign check --guid GUID --id ID FILE [FILE...]
+ *   etssign write --guid GUID --id ID FILE [FILE...]
+ *   etssign check STORE_DIR [FILE...]
+ *   etssign write STORE_DIR [FILE...]
  *
  * In the STORE_DIR form, Id and Guid are read from STORE_DIR/P. With no
  * FILE arguments, every file in STORE_DIR that already has a sibling
@@ -18,7 +18,7 @@
  */
 #define _POSIX_C_SOURCE 200809L
 
-#include "ets5sign.h"
+#include "etssign.h"
 
 #include <dirent.h>
 #include <stdio.h>
@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 
 static void die(const char *msg) {
-    fprintf(stderr, "ets5sign: %s\n", msg);
+    fprintf(stderr, "etssign: %s\n", msg);
     exit(1);
 }
 
@@ -67,7 +67,7 @@ static void load_project_from_store(const char *store_dir, project_t *out) {
     if (path_join(p_path, sizeof(p_path), store_dir, "P") != 0) die("store path too long");
     size_t len;
     char *data = read_file(p_path, &len);
-    if (ets5_read_project_p(data, len, out->id, sizeof(out->id), out->guid, sizeof(out->guid)) != 0) {
+    if (ets_read_project_p(data, len, out->id, sizeof(out->id), out->guid, sizeof(out->guid)) != 0) {
         die("could not find Proj/@Id or ProjInfo/@Guid in STORE_DIR/P");
     }
     free(data);
@@ -75,7 +75,7 @@ static void load_project_from_store(const char *store_dir, project_t *out) {
 
 static uint16_t require_mask(const project_t *proj) {
     uint16_t mask;
-    if (ets5_mask(proj->guid, proj->id, &mask) != 0) {
+    if (ets_mask(proj->guid, proj->id, &mask) != 0) {
         die("malformed project GUID");
     }
     return mask;
@@ -84,8 +84,8 @@ static uint16_t require_mask(const project_t *proj) {
 static int check_one(const char *file_path, uint16_t mask) {
     size_t len;
     char *data = read_file(file_path, &len);
-    char got[ETS5SIGN_B64_LEN];
-    ets5_hash_b64((const uint8_t *)data, len, mask, got);
+    char got[ETSSIGN_B64_LEN];
+    ets_hash_b64((const uint8_t *)data, len, mask, got);
     free(data);
 
     char hash_path[4096];
@@ -109,8 +109,8 @@ static int check_one(const char *file_path, uint16_t mask) {
 static void write_one(const char *file_path, uint16_t mask) {
     size_t len;
     char *data = read_file(file_path, &len);
-    char b64[ETS5SIGN_B64_LEN];
-    ets5_hash_b64((const uint8_t *)data, len, mask, b64);
+    char b64[ETSSIGN_B64_LEN];
+    ets_hash_b64((const uint8_t *)data, len, mask, b64);
     free(data);
 
     char hash_path[4096];
@@ -154,7 +154,7 @@ static int cmd_mask(int argc, char **argv) {
     }
     if (!guid || !id) die("mask requires --guid GUID --id ID");
     uint16_t mask;
-    if (ets5_mask(guid, id, &mask) != 0) die("malformed GUID");
+    if (ets_mask(guid, id, &mask) != 0) die("malformed GUID");
     printf("%u (0x%x)\n", mask, mask);
     return 0;
 }
@@ -168,11 +168,11 @@ static int cmd_hash(int argc, char **argv) {
     }
     if (!guid || !id || !file) die("hash requires --guid GUID --id ID FILE");
     uint16_t mask;
-    if (ets5_mask(guid, id, &mask) != 0) die("malformed GUID");
+    if (ets_mask(guid, id, &mask) != 0) die("malformed GUID");
     size_t len;
     char *data = read_file(file, &len);
-    char b64[ETS5SIGN_B64_LEN];
-    ets5_hash_b64((const uint8_t *)data, len, mask, b64);
+    char b64[ETSSIGN_B64_LEN];
+    ets_hash_b64((const uint8_t *)data, len, mask, b64);
     free(data);
     printf("%s\n", b64);
     return 0;
@@ -267,17 +267,17 @@ static int cmd_write(int argc, char **argv) {
 
 static int self_test(void) {
     uint16_t mask;
-    if (ets5_mask("00000000-0000-0000-0000-000000000001", "P-0001", &mask) != 0) {
+    if (ets_mask("00000000-0000-0000-0000-000000000001", "P-0001", &mask) != 0) {
         fprintf(stderr, "self-test: bad guid parse\n");
         return 1;
     }
-    char b64[ETS5SIGN_B64_LEN];
-    ets5_hash_b64((const uint8_t *)"ets5hash", 8, mask, b64);
+    char b64[ETSSIGN_B64_LEN];
+    ets_hash_b64((const uint8_t *)"ets5hash", 8, mask, b64);
     if (mask != 319 || strcmp(b64, "TnwiqUYt9qo22B/u9TAwSUUcPTM=") != 0) {
         fprintf(stderr, "self-test failed: mask=%u hash=%s\n", mask, b64);
         return 1;
     }
-    printf("ets5sign self-test OK\n");
+    printf("etssign self-test OK\n");
     return 0;
 }
 
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
     if (argc >= 2 && strcmp(argv[1], "--self-test") == 0) {
         return self_test();
     }
-    if (argc < 2) die("usage: ets5sign hash|mask|check|write ... (see source header)");
+    if (argc < 2) die("usage: etssign hash|mask|check|write ... (see source header)");
 
     const char *cmd = argv[1];
     int rest_argc = argc - 2;
