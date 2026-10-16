@@ -1,6 +1,7 @@
 /*
- * ets5sign - CLI for computing/checking/writing ETS5 ProjectStore
- * .ets5hash companion files. See ets5sign.h for the algorithm.
+ * ets5sign - CLI for computing/checking/writing ETS ProjectStore
+ * .ets5hash companion files. ETS 5 and ETS 6 share this suffix and
+ * recipe. See ets5sign.h for the algorithm.
  *
  * Usage:
  *   ets5sign hash  --guid GUID --id ID FILE

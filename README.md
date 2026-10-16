@@ -1,12 +1,14 @@
 # ets5sign
 
 A tiny, dependency-free C library and CLI for computing the `.ets5hash`
-companion file KNX ETS5 keeps next to each file in a ProjectStore directory.
+companion file KNX ETS keeps next to each file in a ProjectStore directory.
+ETS 5 and ETS 6 use the same suffix and the same recipe. The name of the
+tool follows the companion filename, which ETS 6 still writes as `.ets5hash`.
 
-ETS5's ProjectStore holds the live, uncompressed working copy of a project
-(as opposed to the exported `.knxproj` zip archive). Every file in it is
-paired with a `<name>.ets5hash` file. If you edit a ProjectStore file by
-hand, ETS5 refuses to open the project again with "corrupt data integrity"
+A ProjectStore holds the live, uncompressed working copy of a project
+(as opposed to the exported `.knxproj` zip archive). Every hashed file in
+it is paired with a `<name>.ets5hash` file. If you edit a ProjectStore file
+by hand, ETS refuses to open the project again with "corrupt data integrity"
 until that hash is recomputed. This tool recomputes it.
 
 This is a file-integrity check, not a license check. It has nothing to do
@@ -14,9 +16,9 @@ with, and provides no way to bypass, the KNX Association license dongle.
 
 ## The algorithm
 
-Reverse engineered from `Knx.Ets.ObjectModel.dll`'s
-`HashedFileStream.Check` and `FileProjectStore.set_ProjectGuid`, and
-confirmed by round-tripping an edited file through a real ETS5 instance:
+Reverse engineered from ETS 5's `Knx.Ets.ObjectModel.dll`
+(`HashedFileStream.Check` and `FileProjectStore.set_ProjectGuid`) and
+confirmed on ETS 6.4.1, which writes the same bytes:
 
 ```text
 mask = (sum(project_guid bytes, .NET Guid.ToByteArray order)
@@ -74,7 +76,7 @@ ets5sign write --guid 851555f1-28bb-44de-9ea8-baac8bcd413d --id P-03C4 somefile
 ets5sign mask  --guid 851555f1-28bb-44de-9ea8-baac8bcd413d --id P-03C4
 ```
 
-Close ETS5 before editing ProjectStore files on disk. The project's
+Close ETS before editing ProjectStore files on disk. The project's
 `<id>.store` file is a separate, unrelated integrity check and is left
 alone by this tool.
 
@@ -94,6 +96,11 @@ See `include/ets5sign.h` for the full API.
 
 ## Status
 
-Verified against every hashed file (`P`, `B`, `I`, and area files) in a
-real ETS5 5.7.7 ProjectStore, and against ETS5 itself: a file edited and
-re-signed with this tool was opened successfully by the real application.
+The recipe matches ETS 5 and ETS 6.
+
+- ETS 5.7.7: every hashed file in a real ProjectStore matched, and a file
+  edited and re-signed with this tool opened in ETS 5.
+- ETS 6.4.1: every hashed file in a real ProjectStore (`P`, `PT`, `I`, `G`,
+  `B`, and the area files) matched the same recipe. The project name, a
+  room, and a group address were then edited, re-signed, and opened in
+  ETS 6.

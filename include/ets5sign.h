@@ -1,6 +1,7 @@
 /*
- * ets5sign - recompute the per-file integrity hash ETS5 keeps next to each
- * file in a ProjectStore directory (the ".ets5hash" companion).
+ * ets5sign - recompute the per-file integrity hash ETS 5 and ETS 6 keep
+ * next to each file in a ProjectStore directory. Both versions write the
+ * ".ets5hash" companion with this recipe.
  *
  * Reverse engineered from Knx.Ets.ObjectModel.dll's HashedFileStream.Check
  * and FileProjectStore.set_ProjectGuid. Not related to, and does not touch,
