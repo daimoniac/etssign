@@ -1,0 +1,4 @@
+*.o
+*.a
+ets5sign
+ets5sign-asan
